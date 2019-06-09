@@ -19,7 +19,7 @@ fn main() -> std::io::Result<()> {
 fn generate_random(size: i64) -> Vec<i32> {
     let mut rng = rand::thread_rng();
     let mut vec = Vec::new();
-    for _i in 0..size {
+    for _ in 0..size {
         vec.push(rng.gen());
     }
     return vec;
