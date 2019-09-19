@@ -1,11 +1,13 @@
+use std::path::PathBuf;
+
 pub trait InputStream<T> {
-    fn open(&self, filename: &str) -> Box<dyn InputStream<T>>;
+    fn open(&self, file_path: impl Into<PathBuf>) -> std::io::Result<()>;
     fn read_next(&self) -> T;
     fn end_of_stream(&self) -> bool;
 }
 
-pub trait OutputStream<T> {
-    fn create(&self, filename: &str) -> ();
-    fn write(&self, element: T) -> ();
+pub trait OutputStream {
+    fn create(&mut self, file_path: impl Into<PathBuf>) -> std::io::Result<()>;
+    fn write<T>(&self, element: T) -> ();
     fn close(&self) -> ();
 }
