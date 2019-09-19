@@ -2,6 +2,8 @@ use std::fs::File;
 use std::path::PathBuf;
 
 use crate::stream::io_streams::{InputStream, OutputStream};
+use std::fmt::Display;
+use std::io::Write;
 
 pub struct SimpleInputStream<T: 'static> {
     file: File,
@@ -37,12 +39,16 @@ impl OutputStream for SimpleOutputStream {
         Ok(())
     }
 
-    fn write<T>(&self, element: T) -> () {
-        unimplemented!()
+    fn write<T: Display>(&self, element: T) -> () {
+        let string_repr: String = format!("{}", element);
+        let escape_line = string_repr + "\n";
+        let mut file = self.file_handle.as_ref().unwrap();
+        file.write(escape_line.as_bytes()).unwrap();
     }
 
-    fn close(&self) -> () {
-        unimplemented!()
+    fn close(&mut self) -> () {
+        self.file_handle.as_ref().unwrap().flush();
+        self.file_handle = None;
     }
 }
 
@@ -62,5 +68,15 @@ mod tests {
             .create(output_file_path.clone())
             .unwrap();
         assert_eq!(output_file_path.exists(), true);
+    }
+
+    #[test]
+    fn write_arbitrary_data_to_stream() {
+        let tmp_dir = TempDir::new().unwrap();
+        let buf = tmp_dir.path().join("opFile.txt");
+        let mut stream = SimpleOutputStream::new();
+        stream.create("generated_files/one.txt").unwrap();
+        stream.write("Hello");
+        stream.close();
     }
 }

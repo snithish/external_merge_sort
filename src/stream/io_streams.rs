@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::path::PathBuf;
 
 pub trait InputStream<T> {
@@ -8,6 +9,6 @@ pub trait InputStream<T> {
 
 pub trait OutputStream {
     fn create(&mut self, file_path: impl Into<PathBuf>) -> std::io::Result<()>;
-    fn write<T>(&self, element: T) -> ();
-    fn close(&self) -> ();
+    fn write<T: Display>(&self, element: T) -> ();
+    fn close(&mut self) -> ();
 }
