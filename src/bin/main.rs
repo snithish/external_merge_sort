@@ -1,12 +1,17 @@
+extern crate external_merge_sort;
 extern crate rand;
-
 use std::fs::File;
 use std::io::Write;
 
+use external_merge_sort::stream::one_element_at_a_time;
 use rand::Rng;
 
 fn main() -> std::io::Result<()> {
     let mut file = File::create("generated_files/one.txt")?;
+    create_inputs(&mut file)
+}
+
+fn create_inputs(file: &mut File) -> std::io::Result<()> {
     let random_integers = generate_random(1000000);
     for random_integer in random_integers.iter() {
         let string_repr: String = format!("{}", random_integer);

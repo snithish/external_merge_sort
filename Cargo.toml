@@ -3,5 +3,14 @@ name = "external_merge_sort"
 version = "0.1.0"
 authors = ["Nithish Sankaranarayanan <nithishsankaranarayanan@gmail.com>"]
 
+[[bin]]
+name = "merge_sort"
+path = "src/bin/main.rs"
+doc = false
+
+[lib]
+name = "external_merge_sort"
+path = "src/lib.rs"
+
 [dependencies]
 rand = "0.6.5"
