@@ -8,7 +8,9 @@ pub trait InputStream<T> {
 }
 
 pub trait OutputStream {
-    fn create(&mut self, file_path: impl Into<PathBuf>) -> std::io::Result<()>;
-    fn write<T: Display>(&self, element: T) -> ();
+    fn create(file_path: impl Into<PathBuf>) -> Self
+    where
+        Self: Sized;
+    fn write<T: Display>(&mut self, element: T) -> ();
     fn close(&mut self) -> ();
 }

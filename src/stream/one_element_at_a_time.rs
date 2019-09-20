@@ -25,30 +25,26 @@ impl<T> InputStream<T> for SimpleInputStream<T> {
 }
 
 pub struct SimpleOutputStream {
-    file_handle: Option<File>,
+    file_handle: File,
 }
 
-impl SimpleOutputStream {
-    fn new() -> SimpleOutputStream {
-        SimpleOutputStream { file_handle: None }
-    }
-}
 impl OutputStream for SimpleOutputStream {
-    fn create(&mut self, file_path: impl Into<PathBuf>) -> std::io::Result<()> {
-        self.file_handle = Some(File::create(file_path.into())?);
-        Ok(())
+    fn create(file_path: impl Into<PathBuf>) -> Self
+    where
+        Self: Sized,
+    {
+        let file_handle = File::create(file_path.into()).unwrap();
+        SimpleOutputStream { file_handle }
     }
 
-    fn write<T: Display>(&self, element: T) -> () {
+    fn write<T: Display>(&mut self, element: T) -> () {
         let string_repr: String = format!("{}", element);
         let escape_line = string_repr + "\n";
-        let mut file = self.file_handle.as_ref().unwrap();
-        file.write(escape_line.as_bytes()).unwrap();
+        self.file_handle.write(escape_line.as_bytes()).unwrap();
     }
 
     fn close(&mut self) -> () {
-        self.file_handle.as_ref().unwrap().flush();
-        self.file_handle = None;
+        self.file_handle.flush();
     }
 }
 
@@ -64,9 +60,7 @@ mod tests {
         let buf = tmp_dir.path().join("opFile.txt");
         let output_file_path = buf.as_path().clone();
         assert_eq!(output_file_path.exists(), false);
-        SimpleOutputStream::new()
-            .create(output_file_path.clone())
-            .unwrap();
+        SimpleOutputStream::create(output_file_path.clone());
         assert_eq!(output_file_path.exists(), true);
     }
 
@@ -74,8 +68,7 @@ mod tests {
     fn write_arbitrary_data_to_stream() {
         let tmp_dir = TempDir::new().unwrap();
         let buf = tmp_dir.path().join("opFile.txt");
-        let mut stream = SimpleOutputStream::new();
-        stream.create("generated_files/one.txt").unwrap();
+        let mut stream = SimpleOutputStream::create("generated_files/one.txt");
         stream.write("Hello");
         stream.close();
     }
