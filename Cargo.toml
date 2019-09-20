@@ -18,3 +18,8 @@ rand = "0.6.5"
 
 [dev-dependencies]
 tempfile = "3.0.7"
+criterion = "0.3"
+
+[[bench]]
+name = "stream_benchmark"
+harness = false
