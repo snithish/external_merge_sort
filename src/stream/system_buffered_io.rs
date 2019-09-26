@@ -1,16 +1,17 @@
 use std::fs::File;
+use std::io::BufWriter;
 use std::path::PathBuf;
 
 use crate::stream::io_streams::{InputStream, OutputStream};
 use std::fmt::Display;
 use std::io::Write;
 
-pub struct SimpleInputStream<T: 'static> {
+pub struct SystemBufferedInputB<T: 'static> {
     file: File,
     val: Vec<T>,
 }
 
-impl<T> InputStream<T> for SimpleInputStream<T> {
+impl<T> InputStream<T> for SystemBufferedInputB<T> {
     fn open(&self, file_path: impl Into<PathBuf>) -> std::io::Result<()> {
         Ok(())
     }
@@ -24,26 +25,29 @@ impl<T> InputStream<T> for SimpleInputStream<T> {
     }
 }
 
-pub struct SimpleOutputStream {
-    file_handle: File,
+pub struct SystemBufferedOutputStream {
+    buffered_writer: BufWriter<File>,
 }
 
-impl SimpleOutputStream {
-    pub fn create(file_path: impl Into<PathBuf>) -> SimpleOutputStream {
+impl SystemBufferedOutputStream {
+    pub fn create(file_path: impl Into<PathBuf>) -> SystemBufferedOutputStream {
         let file_handle = File::create(file_path.into()).unwrap();
-        SimpleOutputStream { file_handle }
+        let mut stream = BufWriter::new(file_handle);
+        SystemBufferedOutputStream {
+            buffered_writer: stream,
+        }
     }
 }
 
-impl OutputStream for SimpleOutputStream {
+impl OutputStream for SystemBufferedOutputStream {
     fn write<T: Display>(&mut self, element: T) -> () {
         let string_repr: String = format!("{}", element);
         let escape_line = string_repr + "\n";
-        self.file_handle.write(escape_line.as_bytes()).unwrap();
+        self.buffered_writer.write(escape_line.as_bytes()).unwrap();
     }
 
     fn close(&mut self) -> () {
-        self.file_handle.flush();
+        self.buffered_writer.flush();
     }
 }
 
@@ -59,7 +63,7 @@ mod tests {
         let buf = tmp_dir.path().join("opFile.txt");
         let output_file_path = buf.as_path().clone();
         assert_eq!(output_file_path.exists(), false);
-        SimpleOutputStream::create(output_file_path.clone());
+        SystemBufferedOutputStream::create(output_file_path.clone());
         assert_eq!(output_file_path.exists(), true);
     }
 
@@ -67,7 +71,7 @@ mod tests {
     fn write_arbitrary_data_to_stream() {
         let tmp_dir = TempDir::new().unwrap();
         let buf = tmp_dir.path().join("opFile.txt");
-        let mut stream = SimpleOutputStream::create(buf.as_path());
+        let mut stream = SystemBufferedOutputStream::create(buf.as_path());
         stream.write("Hello");
         stream.close();
     }
