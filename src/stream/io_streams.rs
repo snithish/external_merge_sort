@@ -8,6 +8,7 @@ pub trait InputStream<T> {
 }
 
 pub trait OutputStream {
-    fn write<T: Display>(&mut self, element: T) -> ();
+    type Item: Display;
+    fn write(&mut self, element: Self::Item) -> ();
     fn close(&mut self) -> ();
 }

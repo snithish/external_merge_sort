@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::BufWriter;
+use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use crate::stream::io_streams::{InputStream, OutputStream};
@@ -25,22 +26,26 @@ impl<T> InputStream<T> for SystemBufferedInputB<T> {
     }
 }
 
-pub struct SystemBufferedOutputStream {
+pub struct SystemBufferedOutputStream<T: Display> {
     buffered_writer: BufWriter<File>,
+    resource_type: PhantomData<T>,
 }
 
-impl SystemBufferedOutputStream {
-    pub fn create(file_path: impl Into<PathBuf>) -> SystemBufferedOutputStream {
+impl<T: Display> SystemBufferedOutputStream<T> {
+    pub fn create(file_path: impl Into<PathBuf>) -> SystemBufferedOutputStream<T> {
         let file_handle = File::create(file_path.into()).unwrap();
         let mut stream = BufWriter::new(file_handle);
         SystemBufferedOutputStream {
             buffered_writer: stream,
+            resource_type: PhantomData,
         }
     }
 }
 
-impl OutputStream for SystemBufferedOutputStream {
-    fn write<T: Display>(&mut self, element: T) -> () {
+impl<T: Display> OutputStream for SystemBufferedOutputStream<T> {
+    type Item = T;
+
+    fn write(&mut self, element: Self::Item) -> () {
         let string_repr: String = format!("{}", element);
         let escape_line = string_repr + "\n";
         self.buffered_writer.write(escape_line.as_bytes()).unwrap();
@@ -63,7 +68,7 @@ mod tests {
         let buf = tmp_dir.path().join("opFile.txt");
         let output_file_path = buf.as_path().clone();
         assert_eq!(output_file_path.exists(), false);
-        SystemBufferedOutputStream::create(output_file_path.clone());
+        SystemBufferedOutputStream::create(output_file_path.clone()).write(1);
         assert_eq!(output_file_path.exists(), true);
     }
 
